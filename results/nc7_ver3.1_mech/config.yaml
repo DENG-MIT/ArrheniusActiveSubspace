@@ -1,0 +1,26 @@
+mech: "mechanism/nc7_ver3.1_mech.yaml"
+fuel: "NC7H16"
+fuel2air: 11.0
+oxygen: "O2"
+inert: "N2"
+dTign: 400
+is_skeletal: false
+master: "nc7_ver3.1_mech"
+
+lr: 0.001
+weight_decay: 1.e-6
+n_plot: 1
+
+n_exp: 500
+
+pressure:
+  lb: 10.0
+  ub: 60.0
+
+temperature:
+  lb: 700.0
+  ub: 1800.0
+
+phi:
+  lb: 0.5
+  ub: 1.8
