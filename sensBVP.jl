@@ -66,14 +66,12 @@ end
 end
 
 function sensBVP_mthread(ts, pred, p)
-    """
-    Currently not maintaineds
-    """
-    local idt = ts[end]
-    local Tign = pred[end, end]
-    local ng = length(ts)
-    Fy = BandedMatrix(zeros(ng * nu, ng * nu), (nu, nu))
-    Fp = SharedArray{Float64}(ng * nu, np)
+    idt = ts[end]
+    Tign = pred[end, end]
+    ng = length(ts)
+    Fy = BandedMatrix(Zeros(ng * nu, ng * nu), (nu, nu));
+    Fp = SharedArray{Float64}(ng * nu, np);
+    Fu = SharedArray{Float64}(ng * nu, nu - 1);
     i = 1
     i_F = 1 + (i - 1) * nu:i * nu - 1
     @view(Fy[i_F, i_F])[ind_diag] .= ones_nu
@@ -83,50 +81,7 @@ function sensBVP_mthread(ts, pred, p)
 
     dts = @views(ts[2:end] .- ts[1:end - 1]) ./ idt
     @threads for i = 2:ng
-        @view(Fp[1 + (i - 1) * nu:i * nu - 1, :]) .= jacobian((du, x) ->
-                                        dudt!(du, @view(pred[:, i]), x, 0.0),
-                                        du, p)::Array{Float64,2} .* (-idt)
-    end
-    for i = 2:ng
-        @show i
-        u = @view(pred[:, i])
-        i_F = 1 + (i - 1) * nu:i * nu - 1
-        @view(Fy[i_F, i_F]) .= jacobian((du, x) -> dudt!(du, x, p, 0.0),
-                                         du, u)::Array{Float64,2} .* (-idt)
-        @view(Fy[i_F, i * nu]) .= - dudt!(du, u, p, 0.0)
-        @view(Fy[i_F, i_F])[ind_diag] .+= ones_nu ./ (dts[i - 1])
-        @view(Fy[i_F, i_F .- nu])[ind_diag] .+= ones_nu ./ (-dts[i - 1])
-        if i < ng
-            Fy[i * nu, i * nu] = -1.0
-            Fy[i * nu, (i + 1) * nu] = 1.0
-        else
-            Fy[i * nu, i * nu - 1] = 1.0
-        end
-    end
-    dydp = - @views(Fy[1:ng * nu, 1:ng * nu] \ Fp[1:ng * nu, :])
-    return @view(dydp[end, :]) ./ idt
-end
-
-function sensBVP_mthreadfile(ts, pred, p)
-    """
-    Currently not maintaineds
-    """
-    local idt = ts[end]
-    local Tign = pred[end, end]
-    local ng = length(ts)
-    Fy = BandedMatrix(Zeros(ng * nu, ng * nu), (nu, nu))
-    Fp = SharedArray{Float64}(ng * nu, np)
-    Fu = SharedArray{Float64}(ng * nu, nu-1)
-    i = 1
-    i_F = 1 + (i - 1) * nu:i * nu - 1
-    @view(Fy[i_F, i_F])[ind_diag] .= ones_nu
-    Fy[i * nu, i * nu] = -1.0
-    Fy[i * nu, (i + 1) * nu] = 1.0
-    du = similar(@view(pred[:, i]))
-
-    dts = @views(ts[2:end] .- ts[1:end - 1]) ./ idt
-    @threads for i = 2:ng
-        @show "Fp_$i"
+        # @show "Fp_$i"
         u = @view(pred[:, i])
         i_F = 1 + (i - 1) * nu:i * nu - 1
         @view(Fp[i_F, :]) .= jacobian((du, x) ->
@@ -136,7 +91,7 @@ function sensBVP_mthreadfile(ts, pred, p)
                                         du, u)::Array{Float64,2} .* (-idt)
     end
     for i = 2:ng
-        @show "Fy_$i"
+        # @show "Fy_$i"
         u = @view(pred[:, i])
         i_F = 1 + (i - 1) * nu:i * nu - 1
         @view(Fy[i_F, i_F]) .= @view(Fu[i_F, :])
@@ -150,7 +105,31 @@ function sensBVP_mthreadfile(ts, pred, p)
             Fy[i * nu, i * nu - 1] = 1.0
         end
     end
-    dydp = - @views(Fy[1:ng * nu, 1:ng * nu] \ Fp[1:ng * nu, :])
+    dydp = - Fy \ Fp
     return @view(dydp[end, :]) ./ idt
 end
-# sensBVP_mthreadfile(ts, pred, p)
+
+function downsampling(ts, pred; dT=0.1, n_max=100, verbose=false)
+    ind_sample = [1]
+    Ts = pred[end, :]
+    _T = Ts[1]
+    _t = ts[1]
+    for i = 2:length(ts) - 1
+        if (abs(Ts[i] - _T) > dT) & (ts[i] - _t > ts[end] / n_max)
+            _T = Ts[i]
+            _t = ts[i]
+            push!(ind_sample, i)
+        end
+    end
+    push!(ind_sample, length(ts))
+
+    if verbose
+        println("\n original sample size $(length(ts))
+                 downsampled size $(length(ind_sample)) \n")
+    end
+
+    ts = ts[ind_sample]
+    pred = pred[:, ind_sample]
+
+    return ts, pred
+end

@@ -6,6 +6,7 @@ using LinearAlgebra
 using Random
 using Statistics
 using Printf
+using ProgressBars
 using BSON: @save, @load
 using Arrhenius
 using YAML
