@@ -14,7 +14,7 @@ The core functionally is the function of `sensBVP_mthread(ts, pred, p)` located 
 
 The following plot shows the Eigen spectrum for the n-heptane model under 1400 K, 40 atm, equivalence ratio of one.
 
-![Eigen]('./results/nc7_ver3.1_mech/eigs.png')
+![Eigen](./results/nc7_ver3.1_mech/eigs.png)
 
 ## References
 
