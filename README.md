@@ -16,6 +16,14 @@ The following plot shows the Eigen spectrum for the n-heptane model under 1400 K
 
 ![Eigen](./results/nc7_ver3.1_mech/eigs.png)
 
+## Roadmap
+
++ Two-stages pipleline: select active parameters with local sensitivities and then compute active subspace within active variables. This could greatly reduce the computational cost of evaluating the parameter Jacobian and the cost of solving the linear systems. (Easy)
+
++ Exploiting the sparsity of the two Jacobians, especially the parameter Jacobian, which is very sparse for large mechanisms. (Medium)
+
++ Investigate the downsampling straightgies and the effect of ignition temperature (Easy)
+
 ## References
 
 ### active subspace
