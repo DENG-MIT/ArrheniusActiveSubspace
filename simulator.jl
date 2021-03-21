@@ -1,4 +1,6 @@
 
+# TODO: we should be able to select parameters for sensitivity analysis
+# but be cautious about the types.
 @inbounds function dudt!(du, u, p, t)
     Y = @view(u[1:ns])
     T = u[end]

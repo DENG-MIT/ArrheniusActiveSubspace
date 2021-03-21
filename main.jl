@@ -21,10 +21,11 @@ phi = 1.0
 prob = make_prob(T0, P, phi, p);
 
 Random.seed!(0);
-n_sample = Int64(floor(2 * log(np)))
+n_sample = Int64(floor(5 * log(np)))
 p_sample = rand(n_sample, np) .- 0.5;
 
 C = similar(p_sample);
+l_IDT = zeros(n_sample)
 
 epochs = ProgressBar(1:n_sample);
 for i in epochs
@@ -38,6 +39,8 @@ for i in epochs
         break
     end
 
+    l_IDT[i] = ts[end]
+
     set_description(
         epochs,
         string(
@@ -47,9 +50,19 @@ for i in epochs
     C[i, :] = sensBVP_mthread(ts, pred, p)
 end
 
-eigs = eigvals(C' * C)[end - 20:end]
+eigs, eigvec = eigen(C' * C)
 
-plt = plot(eigs);
-xlabel!(plt, "Index")
-ylabel!(plt, "Eigenvalues")
-png(plt, "./results/nc7_ver3.1_mech/eigs.png")
+@save "./results/nc7_ver3.1_mech/eigs.bason" eigs C
+
+eigs = reverse(eigs)
+asv = p_sample * eigvec[end, :]
+
+plt = plot(1:12, eigs[1:12], lw=3, yscale=:log10);
+xlabel!(plt, "Index");
+ylabel!(plt, "Eigenvalues");
+plt_as = Plots.scatter(p_sample * eigvec[:, 1], 
+                        l_IDT, yscale=:log10);
+xlabel!(plt_as, "Active variable");
+ylabel!(plt_as, "IDT [s]");
+plt_sum = plot([plt, plt_as]...);
+png(plt_sum, "./results/nc7_ver3.1_mech/eigs.png");
