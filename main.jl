@@ -14,13 +14,13 @@ const ones_nu = ones(nu - 1);
 include("sensitivity.jl")
 
 # set condition
-phi = 1.0;            # equivalence ratio
+phi = 1.0;          # equivalence ratio
 P = 10.0 * one_atm; # pressure, atm
 T0 = 1200.0;        # initial temperature, K
 
-Random.seed!(0);
+rng = Random.MersenneTwister(0x7777777);
 n_sample = Int64(ceil(5 * log(np)));
-p_sample = rand(n_sample, np) .- 0.5;
+p_sample = rand(rng, n_sample, np) .- 0.5;
 τ_sample = zeros(n_sample); # IDT sample
 ∇f_sample = similar(p_sample); # sensitivities sample
 
@@ -42,7 +42,8 @@ for i in epochs
             ),
         )
         ∇f_sample[i, :] = sensBVP_mthread(ts, pred, p)
-    else
+        # ∇f_sample[i, :] = sensBVP(ts, pred, p)
+    elseif method == "sensBF_mthread"
         idt = get_idt(phi, P, T0, p; dT=dT, dTabort=dTabort);
         τ_sample[i] = idt;
         
@@ -53,6 +54,17 @@ for i in epochs
             ),
         )
         ∇f_sample[i, :] = sensBF_mthread(phi, P, T0, p; dT=dT, dTabort=dTabort, pdiff=5e-3)
+    else
+        idt = get_idt(phi, P, T0, p; dT=dT, dTabort=dTabort);
+        τ_sample[i] = idt;
+        
+        set_description(
+            epochs,
+            string(
+                @sprintf("sample %d with sensBFSA", i)
+            ),
+        )
+        ∇f_sample[i, :] = sensBFSA(phi, P, T0, p; dT=dT, dTabort=dTabort)
     end
 end
 

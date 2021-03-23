@@ -22,6 +22,31 @@
     return vcat(F...)
 end
 
+function downsampling(ts, pred; dT=0.1, n_max=100, verbose=false)
+    ind_sample = [1]
+    Ts = pred[end, :]
+    _T = Ts[1]
+    _t = ts[1]
+    for i = 2:length(ts) - 1
+        if (abs(Ts[i] - _T) > dT) & (ts[i] - _t > ts[end] / n_max)
+            _T = Ts[i]
+            _t = ts[i]
+            push!(ind_sample, i)
+        end
+    end
+    push!(ind_sample, length(ts))
+
+    if verbose
+        println("\n original sample size $(length(ts))
+                 downsampled size $(length(ind_sample)) \n")
+    end
+
+    ts = ts[ind_sample]
+    pred = pred[:, ind_sample]
+
+    return ts, pred
+end
+
 @inbounds function sensBVP(ts, pred, p)
     local ng = length(ts)
     Fp_ = zeros(ng * nu, np)
@@ -44,7 +69,7 @@ end
 
     dts = @views(ts[2:end] .- ts[1:end - 1]) ./ idt
     for i = 2:ng
-        @show i
+        # @show i
         u = @view(pred[:, i])
         i_F = 1 + (i - 1) * nu:i * nu - 1
         @view(Fy[i_F, i_F]) .= jacobian((du, x) -> dudt!(du, x, p, 0.0),
@@ -109,29 +134,23 @@ function sensBVP_mthread(ts, pred, p)
     return @view(dydp[end, :]) ./ idt
 end
 
-function downsampling(ts, pred; dT=0.1, n_max=100, verbose=false)
-    ind_sample = [1]
-    Ts = pred[end, :]
-    _T = Ts[1]
-    _t = ts[1]
-    for i = 2:length(ts) - 1
-        if (abs(Ts[i] - _T) > dT) & (ts[i] - _t > ts[end] / n_max)
-            _T = Ts[i]
-            _t = ts[i]
-            push!(ind_sample, i)
-        end
-    end
-    push!(ind_sample, length(ts))
-
-    if verbose
-        println("\n original sample size $(length(ts))
-                 downsampled size $(length(ind_sample)) \n")
+function sensBFSA(phi, P, T0, p; dT=200, dTabort=600)
+    idt = get_idt(phi, P, T0, p; dT=dT, dTabort=dTabort)
+    prob = make_prob(phi, P, T0, p; tfinal=1.0)
+    
+    function predict_T_at_idt(x)
+        # _prob = remake(prob, p=x)
+        sol = solve(prob, TRBDF2(), p=x, saveat=[0,idt],
+                    reltol=1e-6, abstol=1e-9);
+        pred = Array(sol);
+        return pred[end,end];
     end
 
-    ts = ts[ind_sample]
-    pred = pred[:, ind_sample]
-
-    return ts, pred
+    dTdp = ForwardDiff.gradient(x -> predict_T_at_idt(x), p);
+    
+    @show dTdp;
+    
+    return dTdp ./ idt
 end
 
 # sensitivity calculated by Brute-force method

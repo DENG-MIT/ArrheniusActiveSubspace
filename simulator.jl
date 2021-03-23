@@ -32,7 +32,7 @@ function make_prob(phi, P, T0, p; tfinal=1.0)
     u0 = vcat(Y0, T0);
 
     prob = ODEProblem(dudt!, u0, (0.0, tfinal), p);
-    prob
+    return prob
 end
 
 function get_ind_ign(sol; dT=400)
