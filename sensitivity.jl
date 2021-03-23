@@ -96,7 +96,6 @@ function sensBVP_mthread(ts, pred, p)
     ng = length(ts)
     Fy = BandedMatrix(Zeros(ng * nu, ng * nu), (nu, nu));
     Fp = zeros(ng * nu, np)
-    # Fu = zeros(ng * nu, nu - 1)
     i = 1
     i_F = 1 + (i - 1) * nu:i * nu - 1
     @view(Fy[i_F, i_F])[ind_diag] .= ones_nu
@@ -106,20 +105,16 @@ function sensBVP_mthread(ts, pred, p)
 
     dts = @views(ts[2:end] .- ts[1:end - 1]) ./ idt
     @threads for i = 2:ng
-        # @show "Fp_$i"
-        u = deepcopy(@view(pred[:, i]))
-        du = deepcopy(similar(@view(pred[:, i])))
-        i_F = deepcopy(1 + (i - 1) * nu:i * nu - 1)
+        u = @view(pred[:, i])
+        i_F = 1 + (i - 1) * nu:i * nu - 1
         @view(Fp[i_F, :]) .= jacobian((du, x) -> dudt!(du, u, x, 0.0),
                                         du, p)::Array{Float64,2} .* (-idt)
         @view(Fy[i_F, i_F]) .= jacobian((du, x) -> dudt!(du, x, p, 0.0),
                                         du, u)::Array{Float64,2} .* (-idt)
     end
     for i = 2:ng
-        # @show "Fy_$i"
         u = @view(pred[:, i])
         i_F = 1 + (i - 1) * nu:i * nu - 1
-        # @view(Fy[i_F, i_F]) .= @view(Fu[i_F, :])
         @view(Fy[i_F, i * nu]) .= - dudt!(du, u, p, 0.0)
         @view(Fy[i_F, i_F])[ind_diag] .+= ones_nu ./ (dts[i - 1])
         @view(Fy[i_F, i_F .- nu])[ind_diag] .+= ones_nu ./ (-dts[i - 1])
@@ -142,7 +137,7 @@ function sensBFSA(phi, P, T0, p; dT=200, dTabort=600, tfinal=1.0)
                           dT=dT, dTabort=dTabort, tfinal=tfinal);
     idt = interpx(ts, pred[end,:], pred[end,1]+dT);
     dTdidt = (pred[end,end]-pred[end,end-1])/(ts[end]-ts[end-1]);
-    
+
     prob = make_prob(phi, P, T0, p; tfinal=idt)
     function fsol_T(p, idt)
         sol = solve(prob, Trapezoid(), p=p, saveat=[0,idt],

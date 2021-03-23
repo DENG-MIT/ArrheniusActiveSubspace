@@ -46,16 +46,16 @@ for i in epochs
     );
 
     if method == "sensBVP_mthread" # under testing
-        # ts, pred = downsampling(ts, pred; dT=2, verbose=false);    
+        # ts, pred = downsampling(ts, pred; dT=2, verbose=false);
         ∇f_sample[i, :] = sensBVP_mthread(ts, pred, p);
         # ∇f_sample[i, :] = sensBVP(ts, pred, p);
-    
+
     elseif method == "sensBF_mthread" # unsuitable for large mechanism
         ∇f_sample[i, :] = sensBF_mthread(phi, P, T0, p; dT=dT, dTabort=dTabort, pdiff=5e-3);
-    
+
     elseif method == "sensBFSA" # by ForwardDiff
         ∇f_sample[i, :] = sensBFSA(phi, P, T0, p; dT=dT, dTabort=dTabort);
-    
+
     else
         @show "Wrong sensitivity method.";
     end
