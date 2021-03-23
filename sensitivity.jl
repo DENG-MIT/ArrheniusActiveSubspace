@@ -107,10 +107,9 @@ function sensBVP_mthread(ts, pred, p)
     dts = @views(ts[2:end] .- ts[1:end - 1]) ./ idt
     @threads for i = 2:ng
         # @show "Fp_$i"
-        u = @view(pred[:, i])
-        i_F = 1 + (i - 1) * nu:i * nu - 1
-        @view(Fp[i_F, :]) .= jacobian((du, x) ->
-                                        dudt!(du, @view(pred[:, i]), x, 0.0),
+        u = deepcopy(@view(pred[:, i]))
+        i_F = deepcopy(1 + (i - 1) * nu:i * nu - 1)
+        @view(Fp[i_F, :]) .= jacobian((du, x) -> dudt!(du, u, x, 0.0),
                                         du, p)::Array{Float64,2} .* (-idt)
         @view(Fu[i_F, :]) .= jacobian((du, x) -> dudt!(du, x, p, 0.0),
                                         du, u)::Array{Float64,2} .* (-idt)
