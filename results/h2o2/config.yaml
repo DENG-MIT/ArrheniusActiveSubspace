@@ -1,13 +1,13 @@
-mech: "mechanism/nc7_ver3.1_mech.yaml"
-fuel: "NC7H16"
-fuel2air: 11.0
+mech: "mechanism/h2o2.yaml"
+fuel: "H2"
+fuel2air: 0.5
 oxygen: "O2"
-inert: "N2"
+inert: "AR"
 dTign: 300
 dTabort: 600
 is_skeletal: false
-master: "nc7_ver3.1_mech"
-method: "sensBVP_mthread"
+master: "h2o2"
+method: "sensBF_mthread"
 
 lr: 0.001
 weight_decay: 1.e-6

@@ -1,33 +1,38 @@
-using OrdinaryDiffEq, Flux, Plots
+using Arrhenius
 using Sundials
+using LinearAlgebra
+using OrdinaryDiffEq
 using ForwardDiff
 using ForwardDiff: jacobian, jacobian!
-using LinearAlgebra
-using Random
-using Statistics
-using Printf
-using ProgressBars
-using BSON: @save, @load
-using Arrhenius
 using YAML
+using BSON: @save, @load
+using Plots, Printf, Random
+using Statistics
+using ProgressBars
 using Base.Threads
 using BandedMatrices
 using SharedArrays
+using Dierckx # for interpolation
 
 ENV["GKSwstype"] = "100"
 
+# load input.yaml
 runtime = YAML.load_file("./input.yaml")
 expr_name = runtime["expr_name"]
 is_restart = runtime["is_restart"]
 
+# load $expr_name/config.yaml
 conf = YAML.load_file("$expr_name/config.yaml")
-
 mech = conf["mech"]
 fuel = conf["fuel"]
 fuel2air = Float64(conf["fuel2air"])
 oxygen = conf["oxygen"]
 inert = conf["inert"]
+
 dT = Float64(conf["dTign"])
+dTabort = Float64(conf["dTabort"])
+method = conf["method"]
+
 n_plot = Int64(conf["n_plot"])
 
 if is_restart
@@ -36,8 +41,9 @@ else
     println("Runing $expr_name ...\n")
 end
 
-fig_path = string(expr_name, "/figs")
-ckpt_path = string(expr_name, "/checkpoint")
+exp_path = string(expr_name)
+fig_path = string(exp_path, "/figs")
+ckpt_path = string(exp_path, "/checkpoint")
 
 if !is_restart
     if ispath(fig_path)

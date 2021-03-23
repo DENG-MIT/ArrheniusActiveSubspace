@@ -133,3 +133,17 @@ function downsampling(ts, pred; dT=0.1, n_max=100, verbose=false)
 
     return ts, pred
 end
+
+# sensitivity calculated by Brute-force method
+function sensBF_mthread(phi, P, T0, p; dT=200, dTabort=600, pdiff=5e-3)
+    idt = get_idt(phi, P, T0, p; dT=dT, dTabort=dTabort)
+    np = length(p);
+    sens = zeros(np);
+    @threads for i=1:np
+        pp = deepcopy(p);
+        pp[i] += pdiff;
+        pidt = get_idt(phi, P, T0, pp; dT=dT, dTabort=dTabort)
+        sens[i] = (pidt - idt) / pdiff
+    end
+    return sens ./ idt;
+end

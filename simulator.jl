@@ -22,7 +22,7 @@
     return du
 end
 
-function make_prob(T0, P, phi, p; tfinal=1.0)
+function make_prob(phi, P, T0, p; tfinal=1.0)
     X0 = zeros(ns);
     X0[species_index(gas, fuel)] = phi
     X0[species_index(gas, oxygen)] = fuel2air
@@ -35,15 +35,22 @@ function make_prob(T0, P, phi, p; tfinal=1.0)
     prob
 end
 
-function get_idt(T0, P, phi, p;
-                 dT=400, dTabort=800, doplot=false, tfinal=1.0, saveat=[])
+function get_ind_ign(sol; dT=400)
+    if maximum(sol[end, :]) - sol[end, 1] > dT
+        return findfirst(sol[end, :] .> sol[end, 1] + dT)
+    else
+        println("Warning, no ignition")
+        return length(sol.t)
+    end
+end
 
-    prob = make_prob(T0, P, phi, p; tfinal=tfinal)
+function get_Tcurve(phi, P, T0, p;
+                    dT=400, dTabort=800, doplot=false, tfinal=1.0, saveat=[])
+
+    prob = make_prob(phi, P, T0, p; tfinal=tfinal)
 
     condition(u, t, integrator) = u[end] > T0 + dTabort
-
     affect!(integrator) = terminate!(integrator)
-
     _cb = DiscreteCallback(condition, affect!)
 
     sol = solve(prob, CVODE_BDF(), saveat=saveat,
@@ -60,11 +67,15 @@ function get_idt(T0, P, phi, p;
     return ts, pred
 end
 
-function get_ind_ign(sol; dT=400)
-    if maximum(sol[end, :]) - sol[end, 1] > dT
-        return findfirst(sol[end, :] .> sol[end, 1] + dT)
-    else
-        println("Warning, no ignition")
-        return length(sol.t)
-    end
+function get_idt(phi, P, T0, p;
+                 dT=400, dTabort=800, tfinal=1.0, saveat=[])
+
+    ts, pred = get_Tcurve(phi, P, T0, p;
+                    dT=dT, dTabort=dTabort, tfinal=tfinal, saveat=saveat);
+    N = min(length(ts)-10, 10);
+    _t = ts[end-N:end];
+    _T = pred[end,end-N:end];
+    f = Spline1D(_T, _t);
+    idt = f(_T[1]+dT);
+    return idt;
 end
