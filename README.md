@@ -12,11 +12,11 @@ The core functionally is the function of `sensBVP_mthread(ts, pred, p)` located 
 + auto-differentiation
 + banded matrix
 + multi-thread paralleliration
-+ [sensBVP method](#sensBVP)
++ sensBVP method
 
 The following plot shows the Eigen spectrum for the n-heptane model under 1400 K, 40 atm, equivalence ratio of one, with sensitivities calculated by [sensBVP method](#sensBVP).
 
-![Eigen_n-heptane](./results/nc7_ver3.1_mech/eigs.png)
+![Eigen_n-heptane](./results/nc7_ver3.1_mech/eigs_sensBVP_mthread.png)
 
 ### sensBF
 
@@ -24,7 +24,7 @@ BTW, sensitivity here can also be calculated by brute-forece method, which is al
 
 The following plot shows the Eigen spectrum for the H2 model under 1200 K, 10 atm, equivalence ratio of one, with sensitivities calculated by brute-force method.
 
-![Eigen_H2](./results/h2o2/eigs.png)
+![Eigen_H2](./results/h2o2/eigs_sensBF_mthread=8.png)
 
 ## Roadmap
 
@@ -43,7 +43,7 @@ The following plot shows the Eigen spectrum for the H2 model under 1200 K, 10 at
 
 ### Sensitiivty of ignition delay
 
-* Gururajan, Vyaas, and Fokion N. Egolfopoulos. "Direct sensitivity analysis for ignition delay times." Combustion and Flame 209 (2019): 478-480.[\[sensBVP method\]]()<span id="sensBVP"></span>
+* Gururajan, Vyaas, and Fokion N. Egolfopoulos. "Direct sensitivity analysis for ignition delay times." Combustion and Flame 209 (2019): 478-480.[\[sensBVP method\]](#sensBVP)<span id="sensBVP"></span>
 
 * Ji, Weiqi, Zhuyin Ren, and Chung K. Law. "Evolution of sensitivity directions during autoignition." Proceedings of the Combustion Institute 37, no. 1 (2019): 807-815.
 

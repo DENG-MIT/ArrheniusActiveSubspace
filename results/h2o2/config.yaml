@@ -7,7 +7,7 @@ dTign: 400
 dTabort: 800
 is_skeletal: false
 master: "h2o2"
-method: "sensBVP_mthread"
+method: "sensBF_mthread"
 
 lr: 0.001
 weight_decay: 1.e-6

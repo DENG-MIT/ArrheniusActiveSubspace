@@ -67,15 +67,20 @@ function get_Tcurve(phi, P, T0, p;
     return ts, pred
 end
 
+function interpx(x, y, new_y; N=10)
+    N = min(length(x)-10, N);
+    _x = x[end-N:end];
+    _y = y[end-N:end];
+    f = Spline1D(_y, _x);
+    new_x = f(new_y);
+    return new_x;
+end
+
 function get_idt(phi, P, T0, p;
                  dT=400, dTabort=800, tfinal=1.0, saveat=[])
 
     ts, pred = get_Tcurve(phi, P, T0, p;
                     dT=dT, dTabort=dTabort, tfinal=tfinal, saveat=saveat);
-    N = min(length(ts)-10, 10);
-    _t = ts[end-N:end];
-    _T = pred[end,end-N:end];
-    f = Spline1D(_T, _t);
-    idt = f(_T[1]+dT);
+    idt = interpx(ts, pred[end,:], pred[end,1]+dT);
     return idt;
 end

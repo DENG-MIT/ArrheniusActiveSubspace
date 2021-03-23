@@ -14,9 +14,16 @@ const ones_nu = ones(nu - 1);
 include("sensitivity.jl")
 
 # set condition
+
+# for h2o2
 phi = 1.0;          # equivalence ratio
 P = 10.0 * one_atm; # pressure, atm
 T0 = 1200.0;        # initial temperature, K
+
+# # for n-heptane
+# phi = 1.0;          # equivalence ratio
+# P = 40.0 * one_atm; # pressure, atm
+# T0 = 1400.0;        # initial temperature, K
 
 rng = Random.MersenneTwister(0x7777777);
 n_sample = Int64(ceil(5 * log(np)));
@@ -24,47 +31,33 @@ p_sample = rand(rng, n_sample, np) .- 0.5;
 τ_sample = zeros(n_sample); # IDT sample
 ∇f_sample = similar(p_sample); # sensitivities sample
 
-# sampling for sensitivity   
+# sampling for sensitivity
 epochs = ProgressBar(1:n_sample);
 for i in epochs
     p = p_sample[i, :];
 
-    if method == "sensBVP_mthread"
-        ts, pred = get_Tcurve(phi, P, T0, p; dT=dT, dTabort=dTabort);
-        ts, pred = downsampling(ts, pred; dT=2.0, verbose=false);
+    ts, pred = get_Tcurve(phi, P, T0, p; dT=dT, dTabort=dTabort);
+    idt = interpx(ts, pred[end,:], pred[end,1]+dT);
+    τ_sample[i] = deepcopy(idt);
 
-        τ_sample[i] = ts[end]
+    set_description(
+        epochs,
+        @sprintf("sample %d with %s", i, method)
+    );
 
-        set_description(
-            epochs,
-            string(
-                @sprintf("sample %d with %d points", i, length(ts))
-            ),
-        )
-        ∇f_sample[i, :] = sensBVP_mthread(ts, pred, p)
-        # ∇f_sample[i, :] = sensBVP(ts, pred, p)
-    elseif method == "sensBF_mthread"
-        idt = get_idt(phi, P, T0, p; dT=dT, dTabort=dTabort);
-        τ_sample[i] = idt;
-        
-        set_description(
-            epochs,
-            string(
-                @sprintf("sample %d with sensBF", i)
-            ),
-        )
-        ∇f_sample[i, :] = sensBF_mthread(phi, P, T0, p; dT=dT, dTabort=dTabort, pdiff=5e-3)
+    if method == "sensBVP_mthread" # under testing
+        # ts, pred = downsampling(ts, pred; dT=2, verbose=false);    
+        ∇f_sample[i, :] = sensBVP_mthread(ts, pred, p);
+        # ∇f_sample[i, :] = sensBVP(ts, pred, p);
+    
+    elseif method == "sensBF_mthread" # unsuitable for large mechanism
+        ∇f_sample[i, :] = sensBF_mthread(phi, P, T0, p; dT=dT, dTabort=dTabort, pdiff=5e-3);
+    
+    elseif method == "sensBFSA" # by ForwardDiff
+        ∇f_sample[i, :] = sensBFSA(phi, P, T0, p; dT=dT, dTabort=dTabort);
+    
     else
-        idt = get_idt(phi, P, T0, p; dT=dT, dTabort=dTabort);
-        τ_sample[i] = idt;
-        
-        set_description(
-            epochs,
-            string(
-                @sprintf("sample %d with sensBFSA", i)
-            ),
-        )
-        ∇f_sample[i, :] = sensBFSA(phi, P, T0, p; dT=dT, dTabort=dTabort)
+        @show "Wrong sensitivity method.";
     end
 end
 
@@ -74,7 +67,7 @@ eigs, eigvec = eigen(C);
 eigs = reverse(eigs);
 eigvec = reverse(eigvec, dims=2);
 
-@save string(exp_path, "/eigs.bason") eigs ∇f_sample;
+@save string(exp_path, "/eigs.bson") eigs ∇f_sample p_sample τ_sample;
 
 # show resutls
 h1 = plot(xlabel="Index", ylabel="Eigenvalues");
@@ -84,5 +77,4 @@ h2 = plot(xlabel="Active variable", ylabel="IDT [s]");
 scatter!(p_sample * eigvec[:,1], τ_sample, yscale=:log10);
 
 h = plot([h1, h2]...);
-
 png(h, string(exp_path, "/eigs.png"));

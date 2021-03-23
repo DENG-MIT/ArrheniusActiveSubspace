@@ -4,6 +4,7 @@ using LinearAlgebra
 using OrdinaryDiffEq
 using ForwardDiff
 using ForwardDiff: jacobian, jacobian!
+using DiffEqSensitivity
 using YAML
 using BSON: @save, @load
 using Plots, Printf, Random
