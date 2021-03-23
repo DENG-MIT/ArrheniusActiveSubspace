@@ -18,20 +18,23 @@ phi = 1.0;          # equivalence ratio
 P = 10.0 * one_atm; # pressure, atm
 T0 = 1200.0;        # initial temperature, K
 
+get_Tcurve(phi, P, T0, zeros(nr);
+                    dT=400, dTabort=800, doplot=true, tfinal=1.0, saveat=[])
+
 rng = Random.MersenneTwister(0x7777777);
 n_sample = Int64(ceil(5 * log(np)));
 p_sample = rand(rng, n_sample, np) .- 0.5;
 τ_sample = zeros(n_sample); # IDT sample
 ∇f_sample = similar(p_sample); # sensitivities sample
 
-# sampling for sensitivity   
+# sampling for sensitivity
 epochs = ProgressBar(1:n_sample);
 for i in epochs
     p = p_sample[i, :];
 
     if method == "sensBVP_mthread"
         ts, pred = get_Tcurve(phi, P, T0, p; dT=dT, dTabort=dTabort);
-        ts, pred = downsampling(ts, pred; dT=2.0, verbose=false);
+        # ts, pred = downsampling(ts, pred; dT=1.1, verbose=false);
 
         τ_sample[i] = ts[end]
 
@@ -46,18 +49,18 @@ for i in epochs
     elseif method == "sensBF_mthread"
         idt = get_idt(phi, P, T0, p; dT=dT, dTabort=dTabort);
         τ_sample[i] = idt;
-        
+
         set_description(
             epochs,
             string(
                 @sprintf("sample %d with sensBF", i)
             ),
         )
-        ∇f_sample[i, :] = sensBF_mthread(phi, P, T0, p; dT=dT, dTabort=dTabort, pdiff=5e-3)
+        ∇f_sample[i, :] = sensBF_mthread(phi, P, T0, p; dT=dT, dTabort=dTabort, pdiff=5e-4)
     else
         idt = get_idt(phi, P, T0, p; dT=dT, dTabort=dTabort);
         τ_sample[i] = idt;
-        
+
         set_description(
             epochs,
             string(
@@ -74,7 +77,7 @@ eigs, eigvec = eigen(C);
 eigs = reverse(eigs);
 eigvec = reverse(eigvec, dims=2);
 
-@save string(exp_path, "/eigs.bason") eigs ∇f_sample;
+@save string(exp_path, "/eigs.bson") eigs ∇f_sample p_sample τ_sample;
 
 # show resutls
 h1 = plot(xlabel="Index", ylabel="Eigenvalues");
