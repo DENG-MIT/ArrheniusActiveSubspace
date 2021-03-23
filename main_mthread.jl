@@ -13,16 +13,14 @@ const ones_nu = ones(nu - 1);
 
 include("sensitivity.jl")
 
-# set condition
-
 # for h2o2
 phi = 1.0;          # equivalence ratio
 P = 10.0 * one_atm; # pressure, atm
 T0 = 1200.0;        # initial temperature, K
 
 p = zeros(nr);
-ts, pred = get_Tcurve(phi, P, T0, p; dT=dT, dTabort=dTabort);
-ts, pred = downsampling(ts, pred; dT=2.0, verbose=false);
+ts, pred = get_Tcurve(phi, P, T0, p; dT=dT, doplot=true, dTabort=dTabort);
+# ts, pred = downsampling(ts, pred; dT=2.0, verbose=false);
 idt = ts[end]
 Tign = pred[end, end]
 ng = length(ts)
@@ -62,6 +60,6 @@ for i = 2:ng
     end
 end
 
-dydp = - Fy \ Fp
+@time dydp = - Fy \ Fp
 
 grad = @view(dydp[end, :]) ./ idt
