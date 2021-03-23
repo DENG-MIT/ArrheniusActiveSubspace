@@ -40,6 +40,7 @@ The following plot shows the Eigen spectrum for the H2 model under 1200 K, 10 at
 
 * Ji, Weiqi, Zhuyin Ren, Youssef Marzouk, and Chung K. Law. "Quantifying kinetic uncertainty in turbulent combustion simulations using active subspaces." Proceedings of the Combustion Institute 37, no. 2 (2019): 2175-2182.
 * Ji, Weiqi, Jiaxing Wang, Olivier Zahm, Youssef M. Marzouk, Bin Yang, Zhuyin Ren, and Chung K. Law. "Shared low-dimensional subspaces for propagating kinetic uncertainty to multiple outputs." Combustion and Flame 190 (2018): 146-157.
+* Su, Xingyu, Weiqi Ji, and Zhuyin Ren. "Uncertainty analysis in mechanism reduction via active subspace and transition state analyses." Combustion and Flame 227 (2021): 135-146.
 
 ### Sensitiivty of ignition delay
 
