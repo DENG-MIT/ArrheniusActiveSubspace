@@ -50,7 +50,7 @@ end
 @inbounds function sensBVP(ts, pred, p)
     local ng = length(ts)
     Fp_ = zeros(ng * nu, np)
-    Fy_ = BandedMatrix(zeros(ng * nu, ng * nu), (nu, nu))
+    Fy_ = BandedMatrix(Zeros(ng * nu, ng * nu), (nu, nu))
     return sensBVP!(Fy_, Fp_, ts, pred, p)
 end
 
@@ -137,9 +137,8 @@ end
 function sensBFSA(phi, P, T0, p; dT=200, dTabort=600)
     idt = get_idt(phi, P, T0, p; dT=dT, dTabort=dTabort)
     prob = make_prob(phi, P, T0, p; tfinal=1.0)
-    
+
     function predict_T_at_idt(x)
-        # _prob = remake(prob, p=x)
         sol = solve(prob, TRBDF2(), p=x, saveat=[0,idt],
                     reltol=1e-6, abstol=1e-9);
         pred = Array(sol);
@@ -147,9 +146,9 @@ function sensBFSA(phi, P, T0, p; dT=200, dTabort=600)
     end
 
     dTdp = ForwardDiff.gradient(x -> predict_T_at_idt(x), p);
-    
+
     @show dTdp;
-    
+
     return dTdp ./ idt
 end
 
