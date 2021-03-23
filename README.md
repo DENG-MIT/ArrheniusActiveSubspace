@@ -5,20 +5,26 @@ Active subspace is an elegant approach for uncertainty quantification of combust
 
 This repo demonstrates the capability in computing the active subspace for an n-heptane mechanism with near 5000 reactions, which has never been achieved before.
 
+### sensBVP
+
 The core functionally is the function of `sensBVP_mthread(ts, pred, p)` located in the file `sensBVP.jl`. It exploits following computational techniques:
 
 + auto-differentiation
 + banded matrix
 + multi-thread paralleliration
-+ sensBVP method
++ [sensBVP method](#sensBVP)
+
+The following plot shows the Eigen spectrum for the n-heptane model under 1400 K, 40 atm, equivalence ratio of one, with sensitivities calculated by [sensBVP method](#sensBVP).
+
+![Eigen_n-heptane](./results/nc7_ver3.1_mech/eigs.png)
+
+### sensBF
+
+BTW, sensitivity here can also be calculated by brute-forece method, which is also implemented in `sensBF_mthreads` function. To obtain active subspace, one can only solve sensitivities for sensitive or important reactions, when using brute-force method.
 
 The following plot shows the Eigen spectrum for the H2 model under 1200 K, 10 atm, equivalence ratio of one, with sensitivities calculated by brute-force method.
 
 ![Eigen_H2](./results/h2o2/eigs.png)
-
-The following plot shows the Eigen spectrum for the n-heptane model under 1400 K, 40 atm, equivalence ratio of one, with sensitivities calculated by [BVP method](#sensBF).
-
-![Eigen_n-heptane](./results/nc7_ver3.1_mech/eigs.png)
 
 ## Roadmap
 
@@ -37,7 +43,7 @@ The following plot shows the Eigen spectrum for the n-heptane model under 1400 K
 
 ### Sensitiivty of ignition delay
 
-* Gururajan, Vyaas, and Fokion N. Egolfopoulos. "Direct sensitivity analysis for ignition delay times." Combustion and Flame 209 (2019): 478-480.[^]()<span id="sensBF"></span>
+* Gururajan, Vyaas, and Fokion N. Egolfopoulos. "Direct sensitivity analysis for ignition delay times." Combustion and Flame 209 (2019): 478-480.[\[sensBVP method\]]()<span id="sensBVP"></span>
 
 * Ji, Weiqi, Zhuyin Ren, and Chung K. Law. "Evolution of sensitivity directions during autoignition." Proceedings of the Combustion Institute 37, no. 1 (2019): 807-815.
 
