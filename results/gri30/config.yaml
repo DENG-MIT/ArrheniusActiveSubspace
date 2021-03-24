@@ -7,7 +7,9 @@ dTign: 200
 dTabort: 800
 is_skeletal: false
 master: "gri30"
-method: "sensBVP_mthread"
+method: "sensBVP_mthread" # 108s with 1 thread;  66s with 2 trhread
+# method: "sensBF_mthread"  # 3300s with 1 thread; 1000s with 8 thread
+# method: "sensBFSA"        # 1500s
 
 lr: 0.001
 weight_decay: 1.e-6

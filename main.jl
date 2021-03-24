@@ -17,7 +17,7 @@ include("sensitivity.jl")
 phi = 1.0;          # equivalence ratio
 P = 40.0 * one_atm; # pressure, atm
 T0 = 1200.0;        # initial temperature, K
-ts, pred = get_Tcurve(phi, P, T0, zeros(nr); dT=dT, doplot=true, dTabort=dTabort);
+get_Tcurve(phi, P, T0, zeros(nr); dT=dT, doplot=true, dTabort=dTabort);
 
 # sampling for sensitivity
 rng = Random.MersenneTwister(0x7777777);
@@ -61,11 +61,11 @@ eigs, eigvec = eigen(C);
 eigs = reverse(eigs);
 eigvec = reverse(eigvec, dims=2);
 
-@save string(exp_path, "/eigs_$method.bson") eigs ∇f_sample p_sample τ_sample;
-
+@save string(exp_path, "/eigs_$method.bson") eigs eigvec ∇f_sample p_sample τ_sample;
+# @load string(exp_path, "/eigs_$method.bson") eigs eigvec ∇f_sample p_sample τ_sample;
 
 # show resutls
-pyplot()
+#pyplot()
 l_plt = []
 plt = plot(xlabel="Index", ylabel="Eigenvalues", legend=false);
 plot!(1:12, eigs[1:12], lw=3, marker=:circle, yscale=:log10);
