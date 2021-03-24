@@ -19,7 +19,7 @@ P = 10.0 * one_atm; # pressure, atm
 T0 = 1200.0;        # initial temperature, K
 
 p = zeros(nr);
-ts, pred = get_Tcurve(phi, P, T0, p; dT=dT, doplot=true, dTabort=dTabort);
+@elapsed ts, pred = get_Tcurve(phi, P, T0, p; dT=dT, doplot=true, dTabort=dTabort);
 # ts, pred = downsampling(ts, pred; dT=2.0, verbose=false);
 idt = ts[end]
 Tign = pred[end, end]
@@ -33,11 +33,9 @@ i_F = 1 + (i - 1) * nu:i * nu - 1
 @view(Fy[i_F, i_F])[ind_diag] .= ones_nu
 Fy[i * nu, i * nu] = -1.0
 Fy[i * nu, (i + 1) * nu] = 1.0
-du = similar(@view(pred[:, 1]))
-
 dts = @views(ts[2:end] .- ts[1:end - 1]) ./ idt
 
-@threads for i = 2:ng
+time = @elapsed @threads for i = 2:ng
     u = @view(pred[:, i])
     i_F = 1 + (i - 1) * nu:i * nu - 1
     @view(Fp[i_F, :]) .= jacobian((du, x) -> dudt!(du, u, x, 0.0),
@@ -46,7 +44,7 @@ dts = @views(ts[2:end] .- ts[1:end - 1]) ./ idt
                                     du, u)::Array{Float64,2} .* (-idt)
 end
 
-for i = 2:ng
+@elapsed for i = 2:ng
     u = @view(pred[:, i])
     i_F = 1 + (i - 1) * nu:i * nu - 1
     @view(Fy[i_F, i * nu]) .= - dudt!(du, u, p, 0.0)
@@ -60,6 +58,6 @@ for i = 2:ng
     end
 end
 
-@time dydp = - Fy \ Fp
+time = @elapsed dydp = - Fy \ Fp
 
 grad = @view(dydp[end, :]) ./ idt
