@@ -3,28 +3,38 @@ Use `Arrhenius.jl` to compute active subspace
 
 Active subspace is an elegant approach for uncertainty quantification of combustion models, by exploring the low-dimensional structure in the model parameter space. It identifies the subspace using the sensitivity information of the quantity of interest. It is historically challenging to compute the sensitivity for ignition delay. Thanks to recent advances in the sensitivity algorithms and the auto-differentiation in `Arrhenius.jl`, we are now able to compute the sensitivity quite efficiently.
 
-This repo demonstrates the capability in computing the active subspace for an n-heptane mechanism with near 5000 reactions, which has never been achieved before.
-
 ### sensBVP
 
-The core functionally is the function of `sensBVP_mthread(ts, pred, p)` located in the file `sensBVP.jl`. It exploits following computational techniques:
+The core functionally is the function of `sensBVP_mthread(ts, pred, p)` located in the file `sensitivity.jl`. It exploits following computational techniques:
 
 + auto-differentiation
 + banded matrix
 + multi-thread paralleliration
 + sensBVP method
 
-The following plot shows the Eigen spectrum for the n-heptane model under 1400 K, 40 atm, equivalence ratio of one, with sensitivities calculated by [sensBVP method](#sensBVP).
+The following plot shows the Eigen spectrum and summary plot with sensitivities calculated by [sensBVP method](#sensBVP).
 
-![Eigen_n-heptane](./results/nc7_ver3.1_mech/eigs_sensBVP_mthread.png)
++ n-heptane
+![Eigen_n-heptane](./results/nc7h16_nordin1998/eigs_sensBVP_mthread.png)
+
++ methane
+![Eigen_ch4](./results/gri30/eigs_sensBVP_mthread.png)
+
++ hydrogen
+![Eigen_h2](./results/h2o2/eigs_sensBVP_mthread.png)
+
 
 ### sensBF
 
-BTW, sensitivity here can also be calculated by brute-forece method, which is also implemented in `sensBF_mthreads` function. To obtain active subspace, one can only solve sensitivities for sensitive or important reactions, when using brute-force method.
+Sensitivity can also be calculated by brute-forece method, which is also implemented in `sensBF_mthreads` function. To obtain active subspace, one can only solve sensitivities for sensitive or important reactions, when using brute-force method.
 
 The following plot shows the Eigen spectrum for the H2 model under 1200 K, 10 atm, equivalence ratio of one, with sensitivities calculated by brute-force method.
 
-![Eigen_H2](./results/h2o2/eigs_sensBF_mthread=8.png)
+![Eigen_H2](./results/h2o2/eigs_sensBF_mthread.png)
+
+## Get started
+
+Install all relevent packages imported in `header.jl` and run `main.jl`. Specify the fuel you want to run at `input.yaml`
 
 ## Roadmap
 

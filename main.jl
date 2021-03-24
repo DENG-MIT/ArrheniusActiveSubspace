@@ -15,14 +15,14 @@ include("sensitivity.jl")
 
 # set condition
 phi = 1.0;          # equivalence ratio
-P = 10.0 * one_atm; # pressure, atm
+P = 40.0 * one_atm; # pressure, atm
 T0 = 1200.0;        # initial temperature, K
 ts, pred = get_Tcurve(phi, P, T0, zeros(nr); dT=dT, doplot=true, dTabort=dTabort);
 
 # sampling for sensitivity
 rng = Random.MersenneTwister(0x7777777);
-n_sample = Int64(ceil(5 * log(np)));
-p_sample = rand(rng, n_sample, np) * 0.2 .- 0.1;
+n_sample = Int64(ceil(20 * log(np)));
+p_sample = rand(rng, n_sample, np) .* 1.0 .- 0.5;
 τ_sample = zeros(n_sample); # IDT sample
 ∇f_sample = similar(p_sample); # sensitivities sample
 
@@ -40,7 +40,7 @@ for i in epochs
     );
 
     if method == "sensBVP_mthread" # under testing
-        # ts, pred = downsampling(ts, pred; dT=2, verbose=false);
+        # ts, pred = downsampling(ts, pred; dT=0.5, verbose=false);
         ∇f_sample[i, :] = sensBVP_mthread(ts, pred, p);
         # ∇f_sample[i, :] = sensBVP(ts, pred, p);
 
@@ -61,21 +61,28 @@ eigs, eigvec = eigen(C);
 eigs = reverse(eigs);
 eigvec = reverse(eigvec, dims=2);
 
-@save string(exp_path, "/eigs.bson") eigs ∇f_sample p_sample τ_sample;
+@save string(exp_path, "/eigs_$method.bson") eigs ∇f_sample p_sample τ_sample;
+
 
 # show resutls
-h1 = plot(xlabel="Index", ylabel="Eigenvalues");
+pyplot()
+l_plt = []
+plt = plot(xlabel="Index", ylabel="Eigenvalues", legend=false);
 plot!(1:12, eigs[1:12], lw=3, marker=:circle, yscale=:log10);
 xlims!((1, 12));
 xticks!(1:1:12);
+push!(l_plt, plt)
 
-h2 = plot(xlabel="Active variable", ylabel="IDT [s]");
-scatter!(p_sample * eigvec[:,1], τ_sample, yscale=:log10);
+plt = plot(xlabel="Active variable", ylabel="IDT [s]", legend=false);
+scatter!(p_sample * eigvec[:,1], τ_sample, yscale=:log10, msize=8);
+push!(l_plt, plt)
 
-#For online blog
-h = plot([h1, h2]..., legend=false);
+plt = plot(xlabel="Active variable 1", ylabel="Active variable 2", legend=true);
+z = log10.(τ_sample);
+scatter!(p_sample * eigvec[:,1], p_sample * eigvec[:,2], marker_z=z, msize=8);
+push!(l_plt, plt)
 
 # For paper
-# h = plot([h1, h2]..., legend=false, framestyle = :box, 
-#                       layout = (2, 1), size = (600, 600));
-png(h, string(exp_path, "/eigs.png"));
+h = plot(l_plt..., legend=false, framestyle = :box, 
+                      size = (1000, 900));
+png(h, string(exp_path, "/eigs_$method.png"));
