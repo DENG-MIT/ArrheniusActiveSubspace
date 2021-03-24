@@ -3,11 +3,11 @@ fuel: "NC7H16"
 fuel2air: 11.0
 oxygen: "O2"
 inert: "N2"
-dTign: 300
-dTabort: 600
+dTign: 200
+dTabort: 800
 is_skeletal: false
-master: "nc7_ver3.1_mech"
-method: "sensBFSA"
+master: "gri30"
+method: "sensBVP_mthread"
 
 lr: 0.001
 weight_decay: 1.e-6

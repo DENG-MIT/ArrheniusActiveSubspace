@@ -69,7 +69,6 @@ end
 
     dts = @views(ts[2:end] .- ts[1:end - 1]) ./ idt
     for i = 2:ng
-        # @show i
         u = @view(pred[:, i])
         i_F = 1 + (i - 1) * nu:i * nu - 1
         @view(Fy[i_F, i_F]) .= jacobian((du, x) -> dudt!(du, x, p, 0.0),
@@ -101,19 +100,43 @@ function sensBVP_mthread(ts, pred, p)
     @view(Fy[i_F, i_F])[ind_diag] .= ones_nu
     Fy[i * nu, i * nu] = -1.0
     Fy[i * nu, (i + 1) * nu] = 1.0
-    du = similar(@view(pred[:, i]))
 
     dts = @views(ts[2:end] .- ts[1:end - 1]) ./ idt
+
+    # for i = 2:ng
+    #     u = @view(pred[:, i])
+    #     du = similar(u)
+    #     i_F = 1 + (i - 1) * nu:i * nu - 1
+    #     @view(Fp[i_F, :]) .= jacobian((du, x) -> dudt!(du, u, x, 0.0),
+    #                                     du, p)::Array{Float64,2} .* (-idt)
+    #     @view(Fy[i_F, i_F]) .= jacobian((du, x) -> dudt!(du, x, p, 0.0),
+    #                                     du, u)::Array{Float64,2} .* (-idt)
+    # end
+    # @show sum(Fp) sum(Fy)
+    # @show sum(Fy[end-nu:end, end-nu:end])
+    # @show sum(Fy[end-20*nu:end, end-20*nu:end])
+
     @threads for i = 2:ng
         u = @view(pred[:, i])
+        du = similar(u)
         i_F = 1 + (i - 1) * nu:i * nu - 1
         @view(Fp[i_F, :]) .= jacobian((du, x) -> dudt!(du, u, x, 0.0),
-                                        du, p)::Array{Float64,2} .* (-idt)
-        @view(Fy[i_F, i_F]) .= jacobian((du, x) -> dudt!(du, x, p, 0.0),
-                                        du, u)::Array{Float64,2} .* (-idt)
+                                    du, p)::Array{Float64,2} .* (-idt)
     end
+    @threads for i = 2:ng
+        u = @view(pred[:, i])
+        du = similar(u)
+        i_F = 1 + (i - 1) * nu:i * nu - 1
+        @view(Fy[i_F, i_F]) .= jacobian((du, x) -> dudt!(du, x, p, 0.0),
+                                    du, u)::Array{Float64,2} .* (-idt)
+    end
+    # @show sum(Fp) sum(Fy)
+    # @show sum(Fy[end-nu:end, end-nu:end])
+    # @show sum(Fy[end-20*nu:end, end-20*nu:end])
+
     for i = 2:ng
         u = @view(pred[:, i])
+        du = similar(u)
         i_F = 1 + (i - 1) * nu:i * nu - 1
         @view(Fy[i_F, i * nu]) .= - dudt!(du, u, p, 0.0)
         @view(Fy[i_F, i_F])[ind_diag] .+= ones_nu ./ (dts[i - 1])
@@ -135,8 +158,8 @@ sensealg = ForwardDiffSensitivity()
 function sensBFSA(phi, P, T0, p; dT=200, dTabort=600, tfinal=1.0)
     ts, pred = get_Tcurve(phi, P, T0, p;
                           dT=dT, dTabort=dTabort, tfinal=tfinal);
-    idt = interpx(ts, pred[end,:], pred[end,1]+dT);
-    dTdidt = (pred[end,end]-pred[end,end-1])/(ts[end]-ts[end-1]);
+    idt = interpx(ts, pred[end,:], pred[end,1] + dT);
+    dTdidt = (pred[end,end] - pred[end,end - 1]) / (ts[end] - ts[end - 1]);
 
     prob = make_prob(phi, P, T0, p; tfinal=idt)
     function fsol_T(p, idt)
@@ -145,7 +168,7 @@ function sensBFSA(phi, P, T0, p; dT=200, dTabort=600, tfinal=1.0)
         return sol[end,end];
     end
 
-    dTdp = ForwardDiff.gradient(x -> fsol_T(x,idt), p);
+    dTdp = ForwardDiff.gradient(x -> fsol_T(x, idt), p);
 
     return dTdp ./ dTdidt ./ idt
 end

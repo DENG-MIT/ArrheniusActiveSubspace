@@ -3,11 +3,11 @@ fuel: "CH4"
 fuel2air: 2.0
 oxygen: "O2"
 inert: "AR"
-dTign: 400
+dTign: 200
 dTabort: 800
 is_skeletal: false
 master: "gri30"
-method: "sensBF_mthread"
+method: "sensBVP_mthread"
 
 lr: 0.001
 weight_decay: 1.e-6
