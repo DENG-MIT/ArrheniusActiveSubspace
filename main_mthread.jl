@@ -14,18 +14,17 @@ const ones_nu = ones(nu - 1);
 include("sensitivity.jl")
 
 phi = 1.0;          # equivalence ratio
-P = 10.0 * one_atm; # pressure, atm
+P = 40.0 * one_atm; # pressure, atm
 T0 = 1200.0;        # initial temperature, K
 
 p = zeros(nr);
-@elapsed ts, pred = get_Tcurve(phi, P, T0, p; dT=dT, doplot=true, dTabort=dTabort);
+@elapsed ts, pred = get_Tcurve(phi, P, T0, p;
+                                dT=dT, doplot=true, dTabort=dTabort);
 # ts, pred = downsampling(ts, pred; dT=2.0, verbose=false);
 idt = ts[end]
 Tign = pred[end, end]
 ng = length(ts)
 Fy = BandedMatrix(Zeros(ng * nu, ng * nu), (nu, nu));
-Fym = BandedMatrix(Zeros(ng * nu, ng * nu), (nu, nu));
-Fpm = zeros(ng * nu, np);
 Fp  = zeros(ng * nu, np);
 i = 1;
 i_F = 1 + (i - 1) * nu:i * nu - 1;
@@ -35,15 +34,6 @@ Fy[i * nu, (i + 1) * nu] = 1.0;
 du = similar(pred[:, 1])
 
 dts = @views(ts[2:end] .- ts[1:end - 1]) ./ idt;
-
-# @elapsed for i = 2:ng
-#     u = @view(pred[:, i])
-#     i_F = 1 + (i - 1) * nu:i * nu - 1
-#     @view(Fp[i_F, :]) .= jacobian((du, x) -> dudt!(du, u, x, 0.0),
-#                                     du, p)::Array{Float64,2} .* (-idt)
-#     @view(Fy[i_F, i_F]) .= jacobian((du, x) -> dudt!(du, x, p, 0.0),
-#                                     du, u)::Array{Float64,2} .* (-idt)
-# end
 
 @threads for i = ng-10:ng
     u = @view(pred[:, i])
@@ -75,6 +65,5 @@ end
     end
 end
 
-time = @elapsed dydp = - Fy \ Fp
-
+@time dydp = - Fy \ sparse(Fp)
 grad = @view(dydp[end, :]) ./ idt

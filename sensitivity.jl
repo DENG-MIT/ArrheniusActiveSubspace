@@ -102,20 +102,6 @@ function sensBVP_mthread(ts, pred, p)
     Fy[i * nu, (i + 1) * nu] = 1.0
 
     dts = @views(ts[2:end] .- ts[1:end - 1]) ./ idt
-
-    # for i = 2:ng
-    #     u = @view(pred[:, i])
-    #     du = similar(u)
-    #     i_F = 1 + (i - 1) * nu:i * nu - 1
-    #     @view(Fp[i_F, :]) .= jacobian((du, x) -> dudt!(du, u, x, 0.0),
-    #                                     du, p)::Array{Float64,2} .* (-idt)
-    #     @view(Fy[i_F, i_F]) .= jacobian((du, x) -> dudt!(du, x, p, 0.0),
-    #                                     du, u)::Array{Float64,2} .* (-idt)
-    # end
-    # @show sum(Fp) sum(Fy)
-    # @show sum(Fy[end-nu:end, end-nu:end])
-    # @show sum(Fy[end-20*nu:end, end-20*nu:end])
-
     @threads for i = 2:ng
         u = @view(pred[:, i])
         du = similar(u)
@@ -130,10 +116,6 @@ function sensBVP_mthread(ts, pred, p)
         @view(Fy[i_F, i_F]) .= jacobian((du, x) -> dudt!(du, x, p, 0.0),
                                     du, u)::Array{Float64,2} .* (-idt)
     end
-    # @show sum(Fp) sum(Fy)
-    # @show sum(Fy[end-nu:end, end-nu:end])
-    # @show sum(Fy[end-20*nu:end, end-20*nu:end])
-
     for i = 2:ng
         u = @view(pred[:, i])
         du = similar(u)
@@ -148,7 +130,7 @@ function sensBVP_mthread(ts, pred, p)
             Fy[i * nu, i * nu - 1] = 1.0
         end
     end
-    dydp = - Fy \ Fp
+    dydp = - Fy \ sparse(Fp)
     return @view(dydp[end, :]) ./ idt
 end
 

@@ -53,7 +53,7 @@ for i in epochs
     else
         @show "Wrong sensitivity method.";
     end
-end 
+end
 
 # eigen decomposition
 C = ∇f_sample' * ∇f_sample;
@@ -83,6 +83,6 @@ scatter!(p_sample * eigvec[:,1], p_sample * eigvec[:,2], marker_z=z, msize=8);
 push!(l_plt, plt)
 
 # For paper
-h = plot(l_plt..., legend=false, framestyle = :box, 
+h = plot(l_plt..., legend=false, framestyle = :box,
                       size = (1000, 900));
 png(h, string(exp_path, "/eigs_$method.png"));

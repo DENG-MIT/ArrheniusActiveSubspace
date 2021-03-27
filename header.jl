@@ -12,7 +12,7 @@ using Statistics
 using ProgressBars
 using Base.Threads
 using BandedMatrices
-using SharedArrays
+using SparseArrays
 using Dierckx # for interpolation
 
 ENV["GKSwstype"] = "100"
