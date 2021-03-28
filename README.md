@@ -1,5 +1,5 @@
 # ArrheniusActiveSubspace
-Use `Arrhenius.jl` to compute active subspace
+Use [`Arrhenius.jl`](https://github.com/DENG-MIT/Arrhenius.jl) to compute active subspace
 
 Active subspace is an elegant approach for uncertainty quantification of combustion models, by exploring the low-dimensional structure in the model parameter space. It identifies the subspace using the sensitivity information of the quantity of interest. It is historically challenging to compute the sensitivity for ignition delay. Thanks to recent advances in the sensitivity algorithms and the auto-differentiation in `Arrhenius.jl`, we are now able to compute the sensitivity quite efficiently.
 
