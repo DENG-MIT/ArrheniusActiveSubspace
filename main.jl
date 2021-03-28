@@ -21,7 +21,7 @@ get_Tcurve(phi, P, T0, zeros(nr); dT=dT, doplot=true, dTabort=dTabort);
 
 # sampling for sensitivity
 rng = Random.MersenneTwister(0x7777777);
-n_sample = Int64(ceil(20 * log(np)));
+n_sample = Int64(ceil(10 * log(np)));
 p_sample = rand(rng, n_sample, np) .* 1.0 .- 0.5;
 τ_sample = zeros(n_sample); # IDT sample
 ∇f_sample = similar(p_sample); # sensitivities sample

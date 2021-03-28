@@ -14,10 +14,16 @@ The core functionally is the function of `sensBVP_mthread(ts, pred, p)` located 
 
 The following plot shows the Eigen spectrum and summary plot with sensitivities calculated by [sensBVP method](#sensBVP).
 
-+ n-heptane
++ n-heptane (631 species 4846 reactions)
+  > 4846-parameters is probably the most complex mechanism uncertainty quantification
+  that existing. It takes 14 hours for 85 samples on 16-threads workstation.
+
+![Eigen_n-heptane](./results/nc7_ver3.1_mech/eigs_sensBVP_mthread.png)
+
++ n-heptane (41 species 168 reactions)
 ![Eigen_n-heptane](./results/nc7h16_nordin1998/eigs_sensBVP_mthread.png)
 
-+ methane
++ methane (53 species 325 reactions)
 ![Eigen_ch4](./results/gri30/eigs_sensBVP_mthread.png)
 
 + hydrogen

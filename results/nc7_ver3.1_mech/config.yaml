@@ -6,7 +6,7 @@ inert: "N2"
 dTign: 200
 dTabort: 800
 is_skeletal: false
-master: "gri30"
+master: "nc7_ver3.1_mech"
 method: "sensBVP_mthread"
 
 lr: 0.001
